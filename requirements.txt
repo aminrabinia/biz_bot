@@ -1,0 +1,6 @@
+functions-framework==3.*
+fastapi
+gradio
+python-dotenv
+openai
+uvicorn
