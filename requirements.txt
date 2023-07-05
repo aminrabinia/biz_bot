@@ -1,6 +1,8 @@
-functions-framework==3.*
+requests
 fastapi
 gradio
 python-dotenv
 openai
 uvicorn
+gspread 
+google-auth
