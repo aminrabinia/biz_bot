@@ -42,6 +42,12 @@ functions=[
     }
 ]
 
+def save_and_email_leads():
+    print('\n-- writing to the spreadsheet')
+    worksheet.insert_row([user.name, user.email, user.car])
+    print('\n*******sending out email')
+    emails.send_out_email(my_user=user)
+    print('\n*******email has been sent')
 
 def get_completion_from_messages(messages, 
                                  model="gpt-3.5-turbo-16k", 
@@ -62,7 +68,7 @@ def get_completion_from_messages(messages,
         please wait a few seconds and try again."
 
     gpt_response = response["choices"][0]["message"]
-    print(gpt_response)
+    # print(gpt_response)
 
     if gpt_response.get("function_call"):
         function_name = gpt_response["function_call"]["name"]
@@ -77,6 +83,10 @@ def get_completion_from_messages(messages,
             print("get_user_info not activated")
     else: 
         print("No function activated")
+    
+    if user.name and user.email and user.car:
+        save_and_email_leads()
+
     return response.choices[0].message["content"]
 
 
@@ -99,11 +109,10 @@ Car inspection and repair
 
 def process_user_message(user_input, all_messages):
     delimiter = "```"
-    # Step 4: Answer the user question
     system_message = f"""
     You are a customer service assistant for a Lexus car dealership. \
     Respond in a friendly and helpful tone, with concise answers from the relevant information available. \
-    Ask for user's selected car, name and email, one by one, to contact them later.
+    Ask for user's selected car, name and email, one by one. Admit receiving each piece of the information.
     """
     messages = [
         {'role': 'system', 'content': system_message},
@@ -123,13 +132,6 @@ app = FastAPI()
 def root():
     return {"message": "hello from chatbot! Redirect to /chatbot"}
 
-@app.on_event("shutdown")
-def on_shutdown():
-    print('\n+++++++closing the app \n-- writing to the spreadsheet')
-    worksheet.insert_row([user.name, user.email, user.car])
-    print('\n*******sending out email')
-    emails.send_out_email(my_user=user)
-    print('\n*******email has been sent')
 
 context = [{'role':'system', 'content':"You are Service Assistant"}]
 chat_history = []
