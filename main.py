@@ -48,7 +48,10 @@ async def save_and_email_leads():
     print('\n*******sending out email')
     emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
-    user = UserData() # clean the object
+    # clean the object
+    user.name = ""
+    user.email = ""
+    user.car = ""
 
 def get_completion_from_messages(messages, 
                                  model="gpt-3.5-turbo-16k", 
