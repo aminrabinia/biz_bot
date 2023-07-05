@@ -42,12 +42,13 @@ functions=[
     }
 ]
 
-def save_and_email_leads():
+async def save_and_email_leads():
     print('\n-- writing to the spreadsheet')
     worksheet.insert_row([user.name, user.email, user.car])
     print('\n*******sending out email')
     emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
+    user = UserData() # clean the object
 
 def get_completion_from_messages(messages, 
                                  model="gpt-3.5-turbo-16k", 

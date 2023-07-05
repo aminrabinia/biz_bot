@@ -9,7 +9,7 @@ from contact import UserData
 # my_user.get_user_info('test1','email1','car1')
 
 FROM='amin@glissai.com'
-TO='aminglissandoai@gmail.com'
+TO=['aminglissandoai@gmail.com', 'michael@blitzfrontmedia.com']
 SUBJECT='New lead generation system test'
 
 def send_out_email(my_user):
