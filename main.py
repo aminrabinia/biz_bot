@@ -42,7 +42,7 @@ functions=[
     }
 ]
 
-async def save_and_email_leads():
+def save_and_email_leads():
     print('\n-- writing to the spreadsheet')
     worksheet.insert_row([user.name, user.email, user.car])
     print('\n*******sending out email')
