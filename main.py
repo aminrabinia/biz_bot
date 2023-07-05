@@ -27,7 +27,7 @@ user = UserData()
 functions=[
     {
         "name": "get_user_info",
-        "description": "Get users contact information and their selected car.",
+        "description": "Get users name, email and their selected car.",
         "parameters": {
             "type": "object",
             "properties": {
