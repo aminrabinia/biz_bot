@@ -8,25 +8,23 @@ import uvicorn
 import json
 import gspread 
 from contact import UserData
-from google.cloud import secretmanager
-from oauth2client.service_account import ServiceAccountCredentials
+# from google.cloud import secretmanager
+# from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv, find_dotenv
+from google.auth import default
+
+# Use Application Default Credentials
+credentials, project = default()
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
-def get_service_account_json():
-    client = secretmanager.SecretManagerServiceClient()
-    name = os.getenv("SECRET_NAME")
-    response = client.access_secret_version(request={"name": name})
-    json_data = response.payload.data.decode("UTF-8")
-    return json.loads(json_data)
 
 scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
  
-credentials = ServiceAccountCredentials.from_json_keyfile_name(get_service_account_json(), scope)
+# credentials = ServiceAccountCredentials.from_json_keyfile_name(get_service_account_json(), scope)
 client = gspread.authorize(credentials)
 worksheet = client.open("Lexus_dealership").sheet1
 print("\n\nWriting contacts to", worksheet.title)
