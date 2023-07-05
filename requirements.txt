@@ -4,5 +4,8 @@ gradio
 python-dotenv
 openai
 uvicorn
+json
 gspread 
 google-auth
+oauth2client
+google-cloud-secretmanager
