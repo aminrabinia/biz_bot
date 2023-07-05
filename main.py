@@ -9,23 +9,15 @@ import json
 import gspread 
 from contact import UserData
 import emails
-# from google.cloud import secretmanager
-# from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv, find_dotenv
 from google.auth import default
-
-# Use Application Default Credentials
-credentials, project = default()
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
-
-scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
-         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
- 
-# credentials = ServiceAccountCredentials.from_json_keyfile_name(get_service_account_json(), scope)
+# Use GCP Application Default Credentials
+credentials, project = default()
 client = gspread.authorize(credentials)
 worksheet = client.open("Lexus_dealership").sheet1
 print("\n\nWriting contacts to", worksheet.title)
@@ -81,7 +73,6 @@ def get_completion_from_messages(messages,
 	            email=arguments.get("email"),
 	            car=arguments.get("car")
                 )
-            worksheet.insert_row([user.name, user.email, user.car])
         else:
             print("get_user_info not activated")
     else: 
@@ -132,6 +123,13 @@ app = FastAPI()
 def root():
     return {"message": "hello from chatbot! Redirect to /chatbot"}
 
+@app.on_event("shutdown")
+def on_shutdown():
+    print('\n+++++++closing the app \n-- writing to the spreadsheet')
+    worksheet.insert_row([user.name, user.email, user.car])
+    print('\n*******sending out email')
+    emails.send_out_email(my_user=user)
+    print('\n*******email has been sent')
 
 context = [{'role':'system', 'content':"You are Service Assistant"}]
 chat_history = []
@@ -157,7 +155,5 @@ gr.mount_gradio_app(app, demo, path="/chatbot")
 if __name__ == "__main__":
     print("\n======api started to redirect=====\n")
     uvicorn.run(app, host='0.0.0.0', port=8080)
-    print('\n+++++++sending email')
-    emails.send_out_email(my_user=user)
-    print('\n*******email has been sent')
+
 
