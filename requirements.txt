@@ -6,5 +6,5 @@ openai
 uvicorn
 gspread 
 google-auth
-
+sendgrid
 

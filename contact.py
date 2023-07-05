@@ -14,6 +14,13 @@ class UserData:
 
         self.print_user_info()
 
+    def get_data(self):
+        return {
+            "name": self.name,
+            "email": self.email,
+            "car": self.car
+        }
+    
     def print_user_info(self):
         print("Name:", self.name)
         print("Email:", self.email)

@@ -8,6 +8,7 @@ import uvicorn
 import json
 import gspread 
 from contact import UserData
+import emails
 # from google.cloud import secretmanager
 # from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv, find_dotenv
@@ -156,3 +157,7 @@ gr.mount_gradio_app(app, demo, path="/chatbot")
 if __name__ == "__main__":
     print("\n======api started to redirect=====\n")
     uvicorn.run(app, host='0.0.0.0', port=8080)
+    print('\n+++++++sending email')
+    emails.send_out_email(my_user=user)
+    print('\n*******email has been sent')
+
