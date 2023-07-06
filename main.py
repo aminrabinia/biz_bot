@@ -116,7 +116,7 @@ def process_user_message(user_input, all_messages):
     system_message = f"""
     You are a customer service assistant for a Lexus car dealership. \
     Respond in a friendly and helpful tone, with concise answers from the relevant information available. \
-    Ask for user's name, email and selected car, one by one. Admit receiving any response.
+    Ask for user's name, email and selected car, one by one. Admit receiving any response and don't repeat already answered questions.
     """
     messages = [
         {'role': 'system', 'content': system_message},
