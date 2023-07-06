@@ -53,6 +53,7 @@ def save_and_email_leads():
     user.email = ""
     user.car = ""
 
+
 def get_completion_from_messages(messages, 
                                  model="gpt-3.5-turbo-16k", 
                                  temperature=0, 
@@ -72,12 +73,13 @@ def get_completion_from_messages(messages,
         please wait a few seconds and try again."
 
     gpt_response = response["choices"][0]["message"]
-    # print(gpt_response)
+    print('gpt response------: ', gpt_response)
 
     if gpt_response.get("function_call"):
         function_name = gpt_response["function_call"]["name"]
         if function_name == "get_user_info":
             arguments = json.loads(gpt_response["function_call"]["arguments"])
+            print('gpt function calling arguments-----: ', arguments)
             user.get_user_info(
 	            name=arguments.get("name"),
 	            email=arguments.get("email"),
