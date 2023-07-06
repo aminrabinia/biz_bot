@@ -27,7 +27,7 @@ user = UserData()
 functions=[
     {
         "name": "get_user_info",
-        "description": "Get customer's name, email and their selected car.",
+        "description": "Collect customer's name, email and their selected car.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -59,7 +59,7 @@ def save_and_email_leads():
 def get_completion_from_messages(messages, 
                                  model="gpt-3.5-turbo-16k", 
                                  temperature=0, 
-                                 max_tokens=100):
+                                 max_tokens=100, call_type="auto"):
     try:
         response = openai.ChatCompletion.create(
             model=model,
@@ -67,9 +67,9 @@ def get_completion_from_messages(messages,
             temperature=temperature, # this is the degree of randomness of the model's output
             max_tokens=max_tokens, # the maximum number of tokens the model can ouptut 
             functions=functions,
-            function_call="auto",
+            function_call=call_type,
         )
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException as e:  # to be improved to handle any possible errors such as service overload
         print("Network error:", e)
         return "Sorry, there is a technical issue on my side... \
         please wait a few seconds and try again."
@@ -81,21 +81,21 @@ def get_completion_from_messages(messages,
         function_name = gpt_response["function_call"]["name"]
         if function_name == "get_user_info":
             arguments = json.loads(gpt_response["function_call"]["arguments"])
-            print('gpt function calling arguments-----: ', arguments)
             user.get_user_info(
 	            customer_name=arguments.get("customer_name"),
 	            customer_email=arguments.get("customer_email"),
 	            selected_car=arguments.get("selected_car")
                 )
-        else:
-            print("get_user_info not activated")
+        if user.customer_name and user.customer_email and user.selected_car:
+            save_and_email_leads()
+        return get_completion_from_messages(messages,  
+                                     model="gpt-3.5-turbo-16k", 
+                                     temperature=0, 
+                                     max_tokens=100,
+                                     call_type="none")
     else: 
         print("No function activated")
-    
-    if user.customer_name and user.customer_email and user.selected_car:
-        save_and_email_leads()
-
-    return response.choices[0].message["content"]
+        return response.choices[0].message["content"]
 
 
 
