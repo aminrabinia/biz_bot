@@ -27,15 +27,17 @@ user = UserData()
 functions=[
     {
         "name": "get_user_info",
-        "description": "Get users name, email and their selected car.",
+        "description": "Get customer's name, email and their selected car.",
         "parameters": {
             "type": "object",
             "properties": {
-                "name": {"type": "string"},        
-                "email": {"type": "string"},
-                "car": {"type": "string", 
-                "description": "the type of car that user is interested in",
-                "enum": ["Lexus RX", "Lexus NX", "Lexus IS", "Lexus GX"]}
+                "customer_name": {"type": "string", 
+                                  "description": "first and,or last name of customer"},        
+                "customer_email": {"type": "string",
+                                   "description": "customer's email address"},
+                "selected_car": {"type": "string", 
+                                 "description": "the type of car that customer is interested in",
+                                 "enum": ["Lexus RX", "Lexus NX", "Lexus IS", "Lexus GX"]}
             },
             "required": [],
         },
@@ -44,14 +46,14 @@ functions=[
 
 def save_and_email_leads():
     print('\n-- writing to the spreadsheet')
-    worksheet.insert_row([user.name, user.email, user.car])
+    worksheet.insert_row([user.customer_name, user.customer_email, user.selected_car])
     print('\n*******sending out email')
     emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
     # clean the object
-    user.name = ""
-    user.email = ""
-    user.car = ""
+    user.customer_name = ""
+    user.customer_email = ""
+    user.selected_car = ""
 
 
 def get_completion_from_messages(messages, 
@@ -81,16 +83,16 @@ def get_completion_from_messages(messages,
             arguments = json.loads(gpt_response["function_call"]["arguments"])
             print('gpt function calling arguments-----: ', arguments)
             user.get_user_info(
-	            name=arguments.get("name"),
-	            email=arguments.get("email"),
-	            car=arguments.get("car")
+	            customer_name=arguments.get("customer_name"),
+	            customer_email=arguments.get("customer_email"),
+	            selected_car=arguments.get("selected_car")
                 )
         else:
             print("get_user_info not activated")
     else: 
         print("No function activated")
     
-    if user.name and user.email and user.car:
+    if user.customer_name and user.customer_email and user.selected_car:
         save_and_email_leads()
 
     return response.choices[0].message["content"]
@@ -118,7 +120,7 @@ def process_user_message(user_input, all_messages):
     system_message = f"""
     You are a customer service assistant for a Lexus car dealership. \
     Respond in a friendly and helpful tone, with concise answers from the relevant information available. \
-    Ask for user's name, email and selected car, one by one. Admit receiving any response and don't repeat already answered questions.
+    Ask for customer's name, email and selected car, one by one. Admit receiving any response and don't repeat already answered questions.
     """
     messages = [
         {'role': 'system', 'content': system_message},
