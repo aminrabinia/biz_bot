@@ -80,6 +80,21 @@ def get_completion_from_messages(messages):
 
     print("all msg history:\n", messages)
 
+    # if all the arguments present, write to file and send email
+    if user.customer_name and user.customer_email and user.selected_car:
+        save_and_email_leads()
+        # if function call activated it returns content null, 
+        # so call api again to get response without function call
+        return call_openai_api(messages = [
+                                {'role': 'system', 'content': f"Thank customer for providing information. \
+                                Ensure them someone will be in touch with them to follow up about {user.selected_car}."}],  
+                                model="gpt-3.5-turbo-16k", 
+                                temperature=0, 
+                                max_tokens=100,
+                                call_type="none"
+                                ).choices[0].message["content"]  # return content 
+
+    # else if args not complete, continue the chat and look for function activation
     api_response = call_openai_api(messages, 
                                     model="gpt-3.5-turbo-16k", 
                                     temperature=0, 
@@ -97,23 +112,14 @@ def get_completion_from_messages(messages):
                                 customer_email=arguments.get("customer_email"),
                                 selected_car=arguments.get("selected_car")
                                 )
+            # if args collected, continue the chat with no function activation
             return call_openai_api(messages = messages,  
                                      model="gpt-3.5-turbo-16k", 
                                      temperature=0, 
                                      max_tokens=100,
-                                     call_type="none").choices[0].message["content"]
-    # if all the arguments present, write to file and send email
-    if user.customer_name and user.customer_email and user.selected_car:
-        save_and_email_leads()
-        # if function call activated it returns content null, 
-        # so call api again to get response without function call
-        return call_openai_api(messages = [
-                                {'role': 'system', 'content': "Thank customer for providing information. \
-                                Ensure them someone will be in touch with them to follow up."}],  
-                                model="gpt-3.5-turbo-16k", 
-                                temperature=0, 
-                                max_tokens=100,
-                                call_type="none").choices[0].message["content"]
+                                     call_type="none"
+                                     ).choices[0].message["content"]
+
     else: 
         print("No function activated")
         return api_response.choices[0].message["content"]
