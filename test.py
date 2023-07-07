@@ -29,8 +29,8 @@ def test_api(messages,
 # test OpenAI API
 # test_api([{'role': 'system', 'content': "is the api available?"}])
 
-import gradio as gr
+import fastapi
 
-print(gr.__version__)
+print(fastapi.__version__)
 
 

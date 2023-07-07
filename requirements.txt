@@ -1,5 +1,5 @@
 requests
-fastapi
+fastapi==0.89.1
 gradio==3.35.2
 python-dotenv
 openai
