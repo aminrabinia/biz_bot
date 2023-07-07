@@ -86,6 +86,11 @@ def get_completion_from_messages(messages,
 	            customer_email=arguments.get("customer_email"),
 	            selected_car=arguments.get("selected_car")
                 )
+            return get_completion_from_messages(messages = messages,  
+                                     model="gpt-3.5-turbo-16k", 
+                                     temperature=0, 
+                                     max_tokens=100,
+                                     call_type="none")
         # if all the arguments present, write to file and send email
         if user.customer_name and user.customer_email and user.selected_car:
             save_and_email_leads()
