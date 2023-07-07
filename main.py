@@ -17,17 +17,17 @@ _ = load_dotenv(find_dotenv()) # read local .env file
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
 # Use GCP Application Default Credentials
-credentials, project = default()
-client = gspread.authorize(credentials)
-worksheet = client.open("Lexus_dealership").sheet1
-print("\n\nWriting contacts to", worksheet.title)
+# credentials, project = default()
+# client = gspread.authorize(credentials)
+# worksheet = client.open("Lexus_dealership").sheet1
+# print("\n\nWriting contacts to", worksheet.title)
 
 user = UserData()
 
 functions=[
     {
         "name": "get_user_info",
-        "description": "Collect customer's name, email and their selected car.",
+        "description": "Collect customer's selected car, name and email.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -46,7 +46,7 @@ functions=[
 
 def save_and_email_leads():
     print('\n-- writing to the spreadsheet')
-    worksheet.insert_row([user.customer_name, user.customer_email, user.selected_car])
+    # worksheet.insert_row([user.customer_name, user.customer_email, user.selected_car])
     print('\n*******sending out email')
     emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
@@ -125,7 +125,7 @@ def process_user_message(user_input, all_messages):
     system_message = f"""
     You are a customer service assistant for a Lexus car dealership. \
     Respond in a friendly and helpful tone, with concise answers from the relevant information available. \
-    Ask for customer's name, email and selected car, one by one. Admit receiving any response and don't repeat already answered questions.
+    Ask for customer's selected car, name and email, one by one. Admit receiving any response and don't repeat already answered questions.
     """
     messages = [
         {'role': 'system', 'content': system_message},

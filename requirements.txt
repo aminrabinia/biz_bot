@@ -1,6 +1,6 @@
 requests
 fastapi
-gradio
+gradio==3.35.2
 python-dotenv
 openai
 uvicorn
