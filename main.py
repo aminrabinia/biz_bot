@@ -91,7 +91,9 @@ def get_completion_from_messages(messages,
             save_and_email_leads()
         # if function call activated it returns content null, 
         # so call api again to get response without function call
-        return get_completion_from_messages(messages,  
+        return get_completion_from_messages(messages = [
+                                    {'role': 'system', 'content': "Thank customer for providing information. \
+                                     Ensure them someone will be in touch with them to follow up."}],  
                                      model="gpt-3.5-turbo-16k", 
                                      temperature=0, 
                                      max_tokens=100,
