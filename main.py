@@ -39,7 +39,7 @@ functions=[
                                  "description": "the type of car that customer is interested in",
                                  "enum": ["Lexus RX", "Lexus NX", "Lexus IS", "Lexus GX"]}
             },
-            "required": [],
+            "required": ["customer_name", "customer_email", "selected_car"],
         },
     }
 ]
@@ -86,8 +86,11 @@ def get_completion_from_messages(messages,
 	            customer_email=arguments.get("customer_email"),
 	            selected_car=arguments.get("selected_car")
                 )
+        # if all the arguments present, write to file and send email
         if user.customer_name and user.customer_email and user.selected_car:
             save_and_email_leads()
+        # if function call activated it returns content null, 
+        # so call api again to get response without function call
         return get_completion_from_messages(messages,  
                                      model="gpt-3.5-turbo-16k", 
                                      temperature=0, 
