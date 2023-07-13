@@ -11,16 +11,25 @@ from contact import UserData
 import emails
 from dotenv import load_dotenv, find_dotenv
 from google.auth import default
+from oauth2client.service_account import ServiceAccountCredentials
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
-# Use GCP Application Default Credentials
-# credentials, project = default()
-# client = gspread.authorize(credentials)
-# worksheet = client.open("Lexus_dealership").sheet1
-# print("\n\nWriting contacts to", worksheet.title)
+json_path = 'gsp-cred.json'
+# Check if the JSON file exists
+if os.path.exists(json_path):
+    # Load the credentials from the service account JSON file
+    scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
+         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(json_path, scope)
+else:
+    # JSON file exists, use it to obtain credentials with GCP Application Default Credentials
+    credentials, project = default()
+client = gspread.authorize(credentials)
+worksheet = client.open("Lexus_dealership").sheet1
+print("\n\nWriting contacts to", worksheet.title)
 
 user = UserData()
 
@@ -46,7 +55,7 @@ functions=[
 
 def save_and_email_leads():
     print('\n-- writing to the spreadsheet')
-    # worksheet.insert_row([user.customer_name, user.customer_email, user.selected_car])
+    worksheet.insert_row([user.customer_name, user.customer_email, user.selected_car])
     print('\n*******sending out email')
     emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
@@ -57,8 +66,8 @@ def save_and_email_leads():
 
 
 def call_openai_api(messages, 
-                    model="gpt-3.5-turbo-16k", 
-                    temperature=0, 
+                    model= "gpt-3.5-turbo-16k", 
+                    temperature=0.0, 
                     max_tokens=100, 
                     call_type="none"):
     try:
@@ -71,14 +80,12 @@ def call_openai_api(messages,
         )
         return response
     
-    except requests.exceptions.RequestException as e:  # to be improved to handle any possible errors such as service overload
+    except Exception as e:  # to be improved to handle any possible errors such as service overload
         print("Network error:", e)
         return "Sorry, there is a technical issue on my side... \
         please wait a few seconds and try again."
 
 def get_completion_from_messages(messages):
-
-    print("all msg history:\n", messages)
 
     # if all the arguments present, write to file and send email
     if user.customer_name and user.customer_email and user.selected_car:
@@ -88,20 +95,13 @@ def get_completion_from_messages(messages):
         return call_openai_api(messages = [
                                 {'role': 'system', 'content': f"Thank customer for providing information. \
                                 Ensure them someone will be in touch with them to follow up about {user.selected_car}."}],  
-                                model="gpt-3.5-turbo-16k", 
-                                temperature=0, 
-                                max_tokens=100,
                                 call_type="none"
                                 ).choices[0].message["content"]  # return content 
 
     # else if args not complete, continue the chat and look for function activation
     api_response = call_openai_api(messages, 
-                                    model="gpt-3.5-turbo-16k", 
-                                    temperature=0, 
-                                    max_tokens=100, 
                                     call_type="auto")
     gpt_response = api_response["choices"][0]["message"]
-    print('gpt response------: ', gpt_response)
 
     if gpt_response.get("function_call"):
         function_name = gpt_response["function_call"]["name"]
@@ -114,9 +114,6 @@ def get_completion_from_messages(messages):
                                 )
             # if args collected, continue the chat with no function activation
             return call_openai_api(messages = messages,  
-                                     model="gpt-3.5-turbo-16k", 
-                                     temperature=0, 
-                                     max_tokens=100,
                                      call_type="none"
                                      ).choices[0].message["content"]
 
@@ -154,7 +151,6 @@ def process_user_message(user_input, all_messages):
     messages = [
         {'role': 'system', 'content': system_message},
         {'role': 'user', 'content': f"{delimiter}{user_input}{delimiter}"},
-        {'role': 'assistant', 'content': f"Relevant product and service information:\n{product_information}"}
     ]
 
     final_response = get_completion_from_messages(all_messages + messages)
@@ -170,7 +166,8 @@ def root():
     return {"message": "hello from chatbot! Redirect to /chatbot"}
 
 
-context = [{'role':'system', 'content':"You are Service Assistant"}]
+context = [{'role':'system', 'content':"You are Service Assistant"}, 
+           {'role': 'assistant', 'content': f"Relevant product and service information:\n{product_information}"}]
 chat_history = []
 
 print("\n===chatbot started======\n")
@@ -184,6 +181,7 @@ with gr.Blocks(css="footer {visibility: hidden}") as demo:
         response, context = process_user_message(message, context)
         context.append({'role':'assistant', 'content':f"{response}"})
         chat_history.append((message, response))
+        print(chat_history)
         return "", chat_history
 
     msg.submit(respond, [msg, chatbot], [msg, chatbot])
