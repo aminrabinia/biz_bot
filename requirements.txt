@@ -7,5 +7,4 @@ uvicorn==0.20.0
 gspread==5.10.0 
 google-auth==2.16.0
 sendgrid==6.10.0
-google-api-python-client
-
+oauth2client
