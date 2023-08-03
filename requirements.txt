@@ -8,3 +8,5 @@ gspread==5.10.0
 google-auth==2.16.0
 sendgrid==6.10.0
 oauth2client
+beautifulsoup4 
+selenium

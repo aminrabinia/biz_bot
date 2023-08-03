@@ -7,17 +7,17 @@ import openai
 import uvicorn
 import json
 import gspread 
-from contact import UserData
 import emails
 from dotenv import load_dotenv, find_dotenv
 from google.auth import default
 from oauth2client.service_account import ServiceAccountCredentials
+import WebCrawler
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
-json_path = 'gsp-cred.json'
+json_path = 'bizkey.json'
 # Check if the JSON file exists
 if os.path.exists(json_path):
     # Load the credentials from the service account JSON file
@@ -27,42 +27,33 @@ if os.path.exists(json_path):
 else:
     # JSON file exists, use it to obtain credentials with GCP Application Default Credentials
     credentials, project = default()
+
 client = gspread.authorize(credentials)
-worksheet = client.open("Lexus_dealership").sheet1
-print("\n\nWriting contacts to", worksheet.title)
+worksheet = client.open("ChatGPT Prompts for Emails, Ads, Landing Pages").sheet1
+print("\n\nReading Prompts from", worksheet.title)
+sheet_content = worksheet.get_all_values()
+if sheet_content:
+    print("google sheet content loaded successfully!")
 
-user = UserData()
 
-functions=[
-    {
-        "name": "get_user_info",
-        "description": "Collect customer's selected car, name and email.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "customer_name": {"type": "string", 
-                                  "description": "first and,or last name of customer"},        
-                "customer_email": {"type": "string",
-                                   "description": "customer's email address"},
-                "selected_car": {"type": "string", 
-                                 "description": "the type of car that customer is interested in",
-                                 "enum": ["Lexus RX", "Lexus NX", "Lexus IS", "Lexus GX"]}
-            },
-            "required": ["customer_name", "customer_email", "selected_car"],
-        },
-    }
-]
+website_url = 'https://scikit-learn.org/stable/about.html'
+
+crawler = WebCrawler(website_url, text_limit = 10000)
+text_content = crawler.collect_texts()
+biz_information = "There is no information about this business!"
+if text_content:
+    print(text_content)
+    biz_information = text_content
+else:
+    print("--- no data extracted about the business ---")
+
+
 
 def save_and_email_leads():
-    print('\n-- writing to the spreadsheet')
-    worksheet.insert_row([user.customer_name, user.customer_email, user.selected_car])
     print('\n*******sending out email')
     emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
-    # clean the object
-    user.customer_name = ""
-    user.customer_email = ""
-    user.selected_car = ""
+
 
 
 def call_openai_api(messages, 
@@ -123,21 +114,7 @@ def get_completion_from_messages(messages):
 
 
 
-product_information="""
 
-Products name, year and price:
-Lexus RX 2022 $30,000
-Lexus NX 2023 $43,000
-Lexus IS 2020 $23,000
-Lexus GX 2023 $43,000
-
-Services available at the dealership:
-Leasing a new car
-Buying a new car
-Buying a pre-owned car
-Car inspection and repair
-
-"""
 
 def process_user_message(user_input, all_messages):
     delimiter = "```"
@@ -163,29 +140,17 @@ app = FastAPI()
 
 @app.get('/')
 def root():
-    return {"message": "hello from chatbot! Redirect to /chatbot"}
+    return {"message": "hello from biz report! Redirect to /report"}
 
 
 context = [{'role':'system', 'content':"You are Service Assistant"}, 
-           {'role': 'assistant', 'content': f"Relevant product and service information:\n{product_information}"}]
+           {'role': 'assistant', 'content': f"Relevant product and service information:\n{biz_information}"}]
 chat_history = []
 
-print("\n===chatbot started======\n")
+print("\n===gradio block started======\n")
 with gr.Blocks(css="footer {visibility: hidden}") as demo:
-    chatbot = gr.Chatbot([["","Hello from LEXUS Dealership! How can I help?"]])
-    msg = gr.Textbox()
-    clear = gr.ClearButton([msg, chatbot])
-
-    def respond(message, chat_history):
-        global context
-        response, context = process_user_message(message, context)
-        context.append({'role':'assistant', 'content':f"{response}"})
-        chat_history.append((message, response))
-        print(chat_history)
-        return "", chat_history
-
-    msg.submit(respond, [msg, chatbot], [msg, chatbot])
-gr.mount_gradio_app(app, demo, path="/chatbot")
+    gr.Textbox(value=sheet_content)
+gr.mount_gradio_app(app, demo, path="/report")
 
 
 
