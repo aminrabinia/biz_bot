@@ -11,41 +11,50 @@ import emails
 from dotenv import load_dotenv, find_dotenv
 from google.auth import default
 from oauth2client.service_account import ServiceAccountCredentials
-import WebCrawler
+from crawler import WebCrawler
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
 json_path = 'bizkey.json'
-# Check if the JSON file exists
+# Local Setup: check if the JSON file exists
 if os.path.exists(json_path):
-    # Load the credentials from the service account JSON file
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
          "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
     credentials = ServiceAccountCredentials.from_json_keyfile_name(json_path, scope)
-else:
-    # JSON file exists, use it to obtain credentials with GCP Application Default Credentials
+# Cloud Setup: obtain credentials with GCP Application Default Credentials
+else: 
     credentials, project = default()
 
 client = gspread.authorize(credentials)
 worksheet = client.open("ChatGPT Prompts for Emails, Ads, Landing Pages").sheet1
 print("\n\nReading Prompts from", worksheet.title)
-sheet_content = worksheet.get_all_values()
-if sheet_content:
-    print("google sheet content loaded successfully!")
+
+def read_sheet():
+    sheet_content = worksheet.get_all_values()
+    if sheet_content:
+        print("\n\ngoogle sheet loaded successfully!\n\n")
+        # Drop the first row (header) [title, prompt]
+        prompts_without_header = sheet_content[1:]
+        # Keep only the second column (prompt) from each row
+        # prompts_from_sheet = [row[1] for row in prompts_without_header]
+        return prompts_without_header
+    else: 
+        print("\n\ngoogle sheet failed to load!\n\n")
+        return ["no title","no prompts"]
 
 
-website_url = 'https://scikit-learn.org/stable/about.html'
-
-crawler = WebCrawler(website_url, text_limit = 10000)
-text_content = crawler.collect_texts()
-biz_information = "There is no information about this business!"
-if text_content:
-    print(text_content)
-    biz_information = text_content
-else:
-    print("--- no data extracted about the business ---")
+def read_website(
+                website_url = 'https://scikit-learn.org/stable/about.html', 
+                text_limit = 10000):
+    crawler = WebCrawler(website_url, text_limit)
+    text_content = crawler.collect_texts()
+    biz_information = "\n\nThere is no information about this business!\n\n" # defult msg
+    if text_content:
+        biz_information = text_content
+    print("\n\n", biz_information ,"\n\n")
+    return biz_information
 
 
 
@@ -59,81 +68,38 @@ def save_and_email_leads():
 def call_openai_api(messages, 
                     model= "gpt-3.5-turbo-16k", 
                     temperature=0.0, 
-                    max_tokens=100, 
-                    call_type="none"):
+                    max_tokens=100):
     try:
         response = openai.ChatCompletion.create(model=model,
                                                 messages=messages,
                                                 temperature=temperature, # this is the degree of randomness of the model's output
                                                 max_tokens=max_tokens, # the maximum number of tokens the model can ouptut 
-                                                functions=functions,
-                                                function_call=call_type,
-        )
-        return response
+                                                )
+        print("\n\nAPI call successful for: ", messages[1]['content'])
+        return response.choices[0].message["content"]
     
     except Exception as e:  # to be improved to handle any possible errors such as service overload
         print("Network error:", e)
         return "Sorry, there is a technical issue on my side... \
         please wait a few seconds and try again."
 
-def get_completion_from_messages(messages):
 
-    # if all the arguments present, write to file and send email
-    if user.customer_name and user.customer_email and user.selected_car:
-        save_and_email_leads()
-        # if function call activated it returns content null, 
-        # so call api again to get response without function call
-        return call_openai_api(messages = [
-                                {'role': 'system', 'content': f"Thank customer for providing information. \
-                                Ensure them someone will be in touch with them to follow up about {user.selected_car}."}],  
-                                call_type="none"
-                                ).choices[0].message["content"]  # return content 
-
-    # else if args not complete, continue the chat and look for function activation
-    api_response = call_openai_api(messages, 
-                                    call_type="auto")
-    gpt_response = api_response["choices"][0]["message"]
-
-    if gpt_response.get("function_call"):
-        function_name = gpt_response["function_call"]["name"]
-        if function_name == "get_user_info":
-            arguments = json.loads(gpt_response["function_call"]["arguments"])
-            user.get_user_info(
-                                customer_name=arguments.get("customer_name"),
-                                customer_email=arguments.get("customer_email"),
-                                selected_car=arguments.get("selected_car")
-                                )
-            # if args collected, continue the chat with no function activation
-            return call_openai_api(messages = messages,  
-                                     call_type="none"
-                                     ).choices[0].message["content"]
-
-    else: 
-        print("No function activated")
-        return api_response.choices[0].message["content"]
-
-
-
-
-
-def process_user_message(user_input, all_messages):
+def process_user_message(user_input, all_messages, knowledge):
     delimiter = "```"
     system_message = f"""
-    You are a customer service assistant for a Lexus car dealership. \
-    Respond in a friendly and helpful tone, with concise answers from the relevant information available. \
-    Don't make assumptions about what values to plug into functions. \
-    Ask for customer's selected car, name and email, one by one. \
-    Admit receiving any response and don't repeat already answered questions.
+    Help me analyze a business based on the information gathered from their website. \
+    Answer any question and prompts with respect to the information provided about \
+    that business in the knowledge based here {knowledge}. 
     """
     messages = [
         {'role': 'system', 'content': system_message},
         {'role': 'user', 'content': f"{delimiter}{user_input}{delimiter}"},
     ]
 
-    final_response = get_completion_from_messages(all_messages + messages)
-    all_messages = all_messages + messages[1:]
+    api_response = call_openai_api(messages) #(all_messages + messages)
+    # all_messages = all_messages + messages[1:]
     
-    return final_response, all_messages
+    return api_response #, all_messages
     
 
 app = FastAPI()
@@ -143,13 +109,24 @@ def root():
     return {"message": "hello from biz report! Redirect to /report"}
 
 
-context = [{'role':'system', 'content':"You are Service Assistant"}, 
-           {'role': 'assistant', 'content': f"Relevant product and service information:\n{biz_information}"}]
-chat_history = []
+
+def run_report(url):
+    sheet_results = read_sheet()
+    web_results = read_website(url)
+    overall_resutls = ""
+    for question in sheet_results:
+        api_answer = process_user_message(question[1], None, web_results)
+        if api_answer:
+            overall_resutls += "\n" + question[0] +"\n"+ api_answer + "\n\n"
+    return overall_resutls
+
 
 print("\n===gradio block started======\n")
 with gr.Blocks(css="footer {visibility: hidden}") as demo:
-    gr.Textbox(value=sheet_content)
+    url = gr.Textbox(label="About Page URL")
+    submit = gr.Button("Submit")
+    textbox = gr.Textbox(label="Report", show_copy_button=True)
+    submit.click(fn=run_report, inputs=url, outputs=textbox)
 gr.mount_gradio_app(app, demo, path="/report")
 
 

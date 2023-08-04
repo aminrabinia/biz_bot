@@ -45,6 +45,11 @@ class WebCrawler:
 
         return ' '.join(all_text)
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    website_url = 'https://scikit-learn.org/stable/about.html'
+    crawler = WebCrawler(website_url, text_limit=10000)
+    text_content = crawler.collect_texts()
+    if text_content:
+        print(text_content)
 
 
