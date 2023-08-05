@@ -7,7 +7,7 @@ import openai
 import uvicorn
 import json
 import gspread 
-import emails
+# import emails
 from dotenv import load_dotenv, find_dotenv
 from google.auth import default
 from oauth2client.service_account import ServiceAccountCredentials
@@ -60,7 +60,7 @@ def read_website(
 
 def save_and_email_leads():
     print('\n*******sending out email')
-    emails.send_out_email(my_user=user)
+    # emails.send_out_email(my_user=user)
     print('\n*******email has been sent')
 
 
