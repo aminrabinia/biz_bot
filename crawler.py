@@ -18,6 +18,7 @@ class WebCrawler:
     def collect_texts(self):
         firefox_options = Options()
         firefox_options.add_argument("--headless")
+        firefox_options.add_argument("--no-sandbox")
         firefox_options.add_argument("--disable-gpu")
         firefox_options.add_argument("--window-size=1920x1080")
 
