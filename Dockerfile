@@ -4,8 +4,11 @@ FROM python:3.9-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Install Firefox and its dependencies
-RUN apt-get update && apt-get install -y firefox-esr && rm -rf /var/lib/apt/lists/*
+# Update the package index
+RUN apt-get update
+
+# Install Firefox
+RUN apt-get install -y firefox
 
 # Copy the Python code and requirements.txt into the container
 COPY main.py /app/
