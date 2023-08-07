@@ -133,6 +133,7 @@ gr.mount_gradio_app(app, demo, path="/report")
 
 
 if __name__ == "__main__":
+    print("\n\napp v.2 starts...\n\n")
     print("\n======api started to redirect=====\n")
     uvicorn.run(app, host='0.0.0.0', port=8080)
 
