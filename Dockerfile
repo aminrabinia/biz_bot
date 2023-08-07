@@ -13,7 +13,7 @@ RUN apt-get install -y firefox
 # Copy the Python code and requirements.txt into the container
 COPY main.py /app/
 COPY crawler.py /app/
-COPY requirements.txt /app/
+COPY requirements.txt /app/ 
 
 # Install dependencies specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
