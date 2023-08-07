@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apt-get update
 
 # Install Firefox
-RUN apt-get install -y firefox
+RUN apt-get install -y firefox 
 
 # Copy the Python code and requirements.txt into the container
 COPY main.py /app/
