@@ -1,6 +1,9 @@
 # Use the official Ubuntu image as the base image
 FROM ubuntu:20.04
 
+# Set non-interactive environment
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Update the package index and install Python and other dependencies
 RUN apt-get update && apt-get install -y python3.10 python3-pip firefox
 
