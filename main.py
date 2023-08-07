@@ -39,6 +39,7 @@ def read_sheet():
         prompts_without_header = sheet_content[1:]
         # Keep only the second column (prompt) from each row
         # prompts_from_sheet = [row[1] for row in prompts_without_header]
+        print(prompts_without_header[:][0])
         return prompts_without_header
     else: 
         print("\n\ngoogle sheet failed to load!\n\n")
