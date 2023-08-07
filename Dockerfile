@@ -1,14 +1,11 @@
-# Use the official Python image as the base image
-FROM python:3.10.7-slim
+# Use the official Ubuntu image as the base image
+FROM ubuntu:20.04
+
+# Update the package index and install Python and other dependencies
+RUN apt-get update && apt-get install -y python3.10 python3-pip firefox
 
 # Set the working directory in the container
 WORKDIR /app
-
-# Update the package index
-RUN apt-get update
-
-# Install Firefox
-RUN apt-get install -y firefox 
 
 # Copy the Python code and requirements.txt into the container
 COPY main.py /app/
@@ -16,7 +13,7 @@ COPY crawler.py /app/
 COPY requirements.txt /app/ 
 
 # Install dependencies specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Set the environment variable for the API key
 
