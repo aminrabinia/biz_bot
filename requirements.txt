@@ -10,4 +10,7 @@ Requests==2.31.0
 selenium==4.11.2
 sendgrid==6.10.0
 uvicorn==0.23.2
+google-api-python-client==2.96.0 
+google-auth-httplib2==0.1.0 
+google-auth-oauthlib==1.0.0
 

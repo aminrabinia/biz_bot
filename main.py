@@ -12,6 +12,8 @@ from dotenv import load_dotenv, find_dotenv
 from google.auth import default
 from oauth2client.service_account import ServiceAccountCredentials
 from crawler import WebCrawler
+from google_docs_automation import GoogleDocsAutomation
+
 
 _ = load_dotenv(find_dotenv()) # read local .env file
 
@@ -30,6 +32,14 @@ else:
 client = gspread.authorize(credentials)
 worksheet = client.open("ChatGPT Prompts for Emails, Ads, Landing Pages").sheet1
 print("\n\nReading Prompts from", worksheet.title)
+
+# Values for creating Google Doc Report Files
+json_path = 'googledocreport.json'
+template_file_id = os.environ['TEMPLATE_FILE_ID']
+emails = os.getenv("EMAILS").split(",")
+
+
+
 
 def read_sheet():
     sheet_content = worksheet.get_all_values()
@@ -59,10 +69,16 @@ def read_website(
 
 
 
-def save_and_email_leads():
-    print('\n*******sending out email')
+def save_and_email_leads(file_content_gdoc, url):
+    # Create an instance of GoogleDocsAutomation and automate the process
+    print("\n***saving google doc for the generated report***\n")
+    copy_title = 'Report for ' + url.strip("https://").strip("http://").split("/")[0]
+    automation = GoogleDocsAutomation(json_path, template_file_id, copy_title, emails, file_content_gdoc)
+    gdoc_url = automation.automate_process()
+    # print('\n*******sending out email')
     # emails.send_out_email(my_user=user)
-    print('\n*******email has been sent')
+    # print('\n*******email has been sent')
+    
 
 
 
@@ -113,12 +129,17 @@ def root():
 
 def run_report(url):
     sheet_results = read_sheet()
+    if not url.startswith("https://") and not url.startswith("http://"):
+        url = "https://" + url
     web_results = read_website(url)
     overall_resutls = ""
     for question in sheet_results:
         api_answer = process_user_message(question[1], None, web_results)
         if api_answer:
             overall_resutls += "\n" + question[0] +"\n"+ api_answer + "\n\n"
+    if overall_resutls:
+        save_and_email_leads(overall_resutls, url) # write to google doc
+
     return overall_resutls
 
 
