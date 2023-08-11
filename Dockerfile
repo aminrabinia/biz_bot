@@ -13,7 +13,9 @@ WORKDIR /app
 # Copy the Python code and requirements.txt into the container
 COPY main.py /app/
 COPY crawler.py /app/
+COPY google_docs_automation.py /app/ 
 COPY requirements.txt /app/ 
+
 
 # Install dependencies specified in requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
