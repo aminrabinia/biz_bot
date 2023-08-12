@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . /app
 
 # Update the package index and install Python and other dependencies
-RUN apt-get update && apt-get install -y python3.10.7 python3-pip firefox
+RUN apt-get update && apt-get install -y python3.10 python3-pip firefox
 
 # Install dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
