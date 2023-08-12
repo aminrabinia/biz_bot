@@ -34,8 +34,7 @@ class GoogleDocsAutomation:
         else:
             # Load the credentials from the service account JSON file
             credentials, project = default()
-        
-
+        print(credentials)
         self.drive_service = build('drive', 'v3', credentials=credentials)
         self.docs_service = build('docs', 'v1', credentials=credentials)
 
