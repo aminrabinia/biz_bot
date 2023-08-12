@@ -36,9 +36,11 @@ class GoogleDocsAutomation:
             credentials, project = default()
 
         print(credentials)
-        
-        self.drive_service = build('drive', 'v3', credentials=credentials)
-        self.docs_service = build('docs', 'v1', credentials=credentials)
+        try:
+            self.drive_service = build('drive', 'v3', credentials=credentials)
+            self.docs_service = build('docs', 'v1', credentials=credentials)
+        except Exception as e:
+            print(f"An error occurred while building the drive service: {e}")
 
     @staticmethod
     def load_credentials(json_path):
