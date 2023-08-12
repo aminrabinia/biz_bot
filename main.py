@@ -19,7 +19,7 @@ _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
-json_path = 'bizkey.json'
+json_path = 'bizgsheetkey.json'
 # Local Setup: check if the JSON file exists
 if os.path.exists(json_path):
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets',
