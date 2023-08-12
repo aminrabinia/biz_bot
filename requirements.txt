@@ -14,5 +14,8 @@ google-auth-httplib2
 google-auth-oauthlib==1.0.0
 google-auth==2.16.0
 oauth2client==4.1.3
+testresources
+markdown-it-py>=1.0.0,<3.0.0
+
 
 
