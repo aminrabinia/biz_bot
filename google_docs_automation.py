@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+# from googleapiclient.errors import HttpError
 from google.oauth2 import service_account
 from google.auth import default
 import os
@@ -53,8 +53,8 @@ class GoogleDocsAutomation:
 
         try:
             self.docs_service.documents().batchUpdate(documentId=copied_file_id, body={'requests': requests}).execute()
-        except HttpError as e:
-            print(f"An error occurred: {e.content}")
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
 
     def share_document(self, copied_file_id):
         for e in self.email:

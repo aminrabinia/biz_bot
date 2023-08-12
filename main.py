@@ -72,7 +72,7 @@ def read_website(
 def save_and_email_leads(file_content_gdoc, url):
     # Create an instance of GoogleDocsAutomation and automate the process
     print("\n***saving google doc for the generated report***\n")
-    copy_title = 'Report for ' + url.strip("https://").strip("http://").split("/")[0]
+    copy_title = 'Report for ' + url.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
     automation = GoogleDocsAutomation(json_path, template_file_id, copy_title, emails, file_content_gdoc)
     gdoc_url = automation.automate_process()
     # print('\n*******sending out email')
