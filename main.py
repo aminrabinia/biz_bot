@@ -56,9 +56,7 @@ def read_sheet():
         return ["no title","no prompts"]
 
 
-def read_website(
-                website_url = 'https://scikit-learn.org/stable/about.html', 
-                text_limit = 10000):
+def read_website(website_url, text_limit = 10000):
     crawler = WebCrawler(website_url, text_limit)
     text_content = crawler.collect_texts()
     biz_information = "\n\nThere is no information about this business!\n\n" # defult msg
@@ -85,7 +83,7 @@ def save_and_email_leads(file_content_gdoc, url):
 def call_openai_api(messages, 
                     model= "gpt-3.5-turbo-16k", 
                     temperature=0.0, 
-                    max_tokens=100):
+                    max_tokens=250):
     try:
         response = openai.ChatCompletion.create(model=model,
                                                 messages=messages,
@@ -101,21 +99,14 @@ def call_openai_api(messages,
         please wait a few seconds and try again."
 
 
-def process_user_message(user_input, all_messages, knowledge):
+def process_user_message(user_input, all_messages, instruction_knowledge):
     delimiter = "```"
-    system_message = f"""
-    Help me analyze a business based on the information gathered from their website. \
-    Answer any question and prompts with respect to the information provided about \
-    that business in the knowledge based here {knowledge}. 
-    """
     messages = [
-        {'role': 'system', 'content': system_message},
+        {'role': 'system', 'content': instruction_knowledge},
         {'role': 'user', 'content': f"{delimiter}{user_input}{delimiter}"},
     ]
-
     api_response = call_openai_api(messages) #(all_messages + messages)
     # all_messages = all_messages + messages[1:]
-    
     return api_response #, all_messages
     
 
@@ -127,14 +118,15 @@ def root():
 
 
 
-def run_report(url):
+def run_report(url, sys_instructions):
     sheet_results = read_sheet()
     if not url.startswith("https://") and not url.startswith("http://"):
         url = "https://" + url
     web_results = read_website(url)
+    overall_instructions = f"{sys_instructions} {web_results}"
     overall_resutls = ""
     for question in sheet_results:
-        api_answer = process_user_message(question[1], None, web_results)
+        api_answer = process_user_message(question[1], None, overall_instructions)
         if api_answer:
             overall_resutls += "\n" + question[0] +"\n"+ api_answer + "\n\n"
     if overall_resutls:
@@ -142,13 +134,19 @@ def run_report(url):
 
     return overall_resutls
 
+system_instruction = """Help me analyze a business based on the DotComSecrets and Expert Secrets by Russell Brunson \
+    and Copywriting frameworks by Gary Halbert. \
+    Use these frameworks to answer any questions and prompts about the business \
+    with their provided information in the knowledge-base here \
+    """
 
 print("\n===gradio block started======\n")
 with gr.Blocks(css="footer {visibility: hidden}") as demo:
-    url = gr.Textbox(label="About Page URL")
+    url = gr.Textbox(label="About Page URL", value="https://blitzfrontmedia.com/about/")
+    instructions = gr.Textbox(label="Instructions", value=system_instruction)
     submit = gr.Button("Submit")
     textbox = gr.Textbox(label="Report", show_copy_button=True)
-    submit.click(fn=run_report, inputs=url, outputs=textbox)
+    submit.click(fn=run_report, inputs=[url,instructions], outputs=textbox)
 gr.mount_gradio_app(app, demo, path="/report")
 
 
